@@ -1,30 +1,65 @@
-use linux_embedded_hal::{Delay, I2cdev};
-use bme280::i2c::BME280;
+use linux_embedded_hal::{Delay, I2CError, I2cdev};
+use bme280::{i2c::BME280, Measurements};
 
 use embedded_hal::delay::DelayNs;
 
 fn main () {
-    // using Linux I2C Bus #1 in this example
-    let i2c_bus = I2cdev::new("/dev/i2c-1").unwrap();
-    let mut delay = Delay;
+    let mut bme280 = BME280Prometheus::init();
+    loop {
+        bme280.read();
+        bme280.print();
+        bme280.wait_ms(1_000);
+    }
+}
 
-    // initialize the BME280 using the primary I2C address 0x76
-    let mut bme280 = BME280::new_primary(i2c_bus);
+struct BME280Prometheus {
+    bme280: BME280<I2cdev>,
+    delay: Delay,
+    measurements: Option<Result<Measurements<I2CError>, bme280::Error<I2CError>>>,
+}
 
-    delay.delay_ms(1_000);
+impl BME280Prometheus {
+    fn init() -> Self {
+        // Using Linux I2C Bus #1 in this example.
+        let i2c_bus = I2cdev::new("/dev/i2c-1").unwrap();
+        let mut delay = Delay;
 
-    // initialize the sensor
-    bme280.init(&mut delay).unwrap();
+        // Initialize the BME280 using the primary I2C address 0x76.
+        let mut bme280 = BME280::new_primary(i2c_bus);
+        bme280.init(&mut delay).unwrap();
 
-    // measure temperature, pressure, and humidity
-    // Change to round_ties_even when stabalized.
-    let measurements = bme280.measure(&mut delay).unwrap();
-    let rh = (measurements.humidity * 10.0).round() / 10.0;
-    let t1 = (measurements.temperature * 10.0).round() / 10.0;
-    let mut t2 = (measurements.temperature * 1.8) + 32.0;
-    t2 = (t2 * 100.0).round() / 100.0;
+        BME280Prometheus {
+            bme280, delay, measurements: None,
+        }
+    }
 
-    println!("Relative Humidity: {rh:.1} ± 3 %");
-    println!("Temperature: {t1:.1} ± 1 °C  {t2:.2} ± 1.8 °F");
-    println!("Pressure: {} ± 100 pascals", measurements.pressure.round());
+    fn read(&mut self) {
+        self.measurements = Some(self.bme280.measure(&mut self.delay));
+    }
+
+    fn print(&self) {
+        match &self.measurements {
+            Some(measurements) => {
+                match measurements {
+                    // Change to round_ties_even when stabilized.
+                    Ok(measurements) => {
+                        let rh = (measurements.humidity * 10.0).round() / 10.0;
+                        let t1 = (measurements.temperature * 10.0).round() / 10.0;
+                        let mut t2 = (measurements.temperature * 1.8) + 32.0;
+                        t2 = (t2 * 100.0).round() / 100.0;
+
+                        println!("Relative Humidity: {rh:.1} ± 3 %");
+                        println!("Temperature: {t1:.1} ± 1 °C  {t2:.2} ± 1.8 °F");
+                        println!("Pressure: {} ± 100 pascals", measurements.pressure.round());
+                    }
+                    Err(e) => println!("{e:?}"),
+                }
+            }
+            None => println!("no readings taken yet"),
+        }
+    }
+
+    fn wait_ms(&mut self, ms: u32) {
+        self.delay.delay_ms(ms);
+    }
 }
