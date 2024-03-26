@@ -1,3 +1,5 @@
+use std::fmt::{self, Write};
+
 use bme280::{i2c::BME280, Measurements};
 use embedded_hal::delay::DelayNs;
 use linux_embedded_hal::{Delay, I2CError, I2cdev};
@@ -6,8 +8,12 @@ fn main() {
     let mut bme280 = BME280Prometheus::init();
     loop {
         bme280.read();
-        print!("{}{}", termion::clear::All, termion::cursor::Goto(1, 1));
-        bme280.print();
+        print!(
+            "{}{}{}",
+            termion::clear::All,
+            termion::cursor::Goto(1, 1),
+            bme280
+        );
         bme280.wait_ms(1_000);
     }
 }
@@ -39,7 +45,14 @@ impl BME280Prometheus {
         self.measurements = Some(self.bme280.measure(&mut self.delay));
     }
 
-    fn print(&self) {
+    fn wait_ms(&mut self, ms: u32) {
+        self.delay.delay_ms(ms);
+    }
+}
+
+impl fmt::Display for BME280Prometheus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut out = String::new();
         match &self.measurements {
             Some(measurements) => {
                 match measurements {
@@ -50,18 +63,20 @@ impl BME280Prometheus {
                         let mut t2 = (measurements.temperature * 1.8) + 32.0;
                         t2 = (t2 * 100.0).round() / 100.0;
 
-                        println!("Relative Humidity: {rh:.1} ± 3 %");
-                        println!("Temperature: {t1:.1} ± 1 °C  {t2:.2} ± 1.8 °F");
-                        println!("Pressure: {} ± 100 pascals", measurements.pressure.round());
+                        writeln!(out, "Relative Humidity: {rh:.1} ± 3 %")?;
+                        writeln!(out, "Temperature: {t1:.1} ± 1 °C  {t2:.2} ± 1.8 °F")?;
+                        writeln!(
+                            out,
+                            "Pressure: {} ± 100 pascals",
+                            measurements.pressure.round()
+                        )?;
                     }
-                    Err(e) => println!("{e:?}"),
+                    Err(e) => writeln!(out, "{e:?}")?,
                 }
             }
-            None => println!("no readings taken yet"),
+            None => writeln!(out, "no readings taken yet")?,
         }
-    }
 
-    fn wait_ms(&mut self, ms: u32) {
-        self.delay.delay_ms(ms);
+        write!(f, "{out}")
     }
 }
