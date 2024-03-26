@@ -1,9 +1,8 @@
-use linux_embedded_hal::{Delay, I2CError, I2cdev};
 use bme280::{i2c::BME280, Measurements};
 use embedded_hal::delay::DelayNs;
-use termion;
+use linux_embedded_hal::{Delay, I2CError, I2cdev};
 
-fn main () {
+fn main() {
     let mut bme280 = BME280Prometheus::init();
     loop {
         bme280.read();
@@ -30,7 +29,9 @@ impl BME280Prometheus {
         bme280.init(&mut delay).unwrap();
 
         BME280Prometheus {
-            bme280, delay, measurements: None,
+            bme280,
+            delay,
+            measurements: None,
         }
     }
 
