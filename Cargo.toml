@@ -8,3 +8,4 @@ embedded-hal = "1"
 linux-embedded-hal = "0.4"
 # bme280 = "0.5"
 bme280 = { git = "https://github.com/RobinThrift/bme280-rs.git", commit = "12d5e98253e0e8fadbd43895a608263f4a84884d"}
+termion = "3"
