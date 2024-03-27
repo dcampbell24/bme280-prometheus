@@ -40,7 +40,7 @@ fn main() {
         temperature.set(measurements.temperature);
         // temperature.set(r);
 
-        delay.delay_ms(1_000);
+        delay.delay_ms(60_000);
         // thread::sleep(one_second);
     }
 }
