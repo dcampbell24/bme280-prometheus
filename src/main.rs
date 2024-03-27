@@ -18,7 +18,7 @@ fn main() {
 
     let humidity = gauge!("humidity_percent");
     let pressure = gauge!("pressure_pascals");
-    let temperature_c = gauge!("temperature_celsius ");
+    let temperature_c = gauge!("temperature_celsius");
     let temperature_f = gauge!("temperature_fahrenheit");
 
     // Using Linux I2C Bus #1 in this example.
@@ -44,7 +44,7 @@ fn main() {
         temperature_f.set((measurements.temperature * 1.8) + 32.0);
         // temperature.set(r);
 
-        delay.delay_ms(60_000);
+        delay.delay_ms(1_000);
         // thread::sleep(one_second);
     }
 }
