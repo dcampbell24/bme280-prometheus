@@ -16,9 +16,10 @@ fn main() {
         .install()
         .expect("failed to install recorder/exporter");
 
-    let humidity = gauge!("humidity");
-    let pressure = gauge!("pressure");
-    let temperature = gauge!("temperature");
+    let humidity = gauge!("humidity %");
+    let pressure = gauge!("pressure pascals");
+    let temperature_c = gauge!("temperature celsius ");
+    let temperature_f = gauge!("temperature fahrenheit");
 
     // Using Linux I2C Bus #1 in this example.
     let i2c_bus = I2cdev::new("/dev/i2c-1").unwrap();
@@ -39,7 +40,8 @@ fn main() {
 
         humidity.set(measurements.humidity);
         pressure.set(measurements.pressure);
-        temperature.set(measurements.temperature);
+        temperature_c.set(measurements.temperature);
+        temperature_f.set((measurements.temperature * 1.8) + 32.0);
         // temperature.set(r);
 
         delay.delay_ms(60_000);
