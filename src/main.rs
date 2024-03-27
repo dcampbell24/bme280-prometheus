@@ -13,6 +13,9 @@ fn main() {
     builder
         .install()
         .expect("failed to install recorder/exporter");
+
+    let humidity = gauge!("humidity");
+    let pressure = gauge!("pressure");
     let temperature = gauge!("temperature");
 
     // Using Linux I2C Bus #1 in this example.
@@ -32,6 +35,8 @@ fn main() {
         print_measurements(&measurements);
         print!("{}{}", termion::clear::All, termion::cursor::Goto(0, 0));
 
+        humidity.set(measurements.humidity);
+        pressure.set(measurements.pressure);
         temperature.set(measurements.temperature);
         // temperature.set(r);
 
