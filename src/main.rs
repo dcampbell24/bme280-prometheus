@@ -1,13 +1,10 @@
-use std::fmt::Write;
+use std::fmt;
 
 use bme280::{i2c::BME280, Measurements};
 use embedded_hal::delay::DelayNs;
 use linux_embedded_hal::{Delay, I2CError, I2cdev};
 use metrics::gauge;
 use metrics_exporter_prometheus::PrometheusBuilder;
-// use rand::Rng;
-
-// use std::{thread, time};
 
 fn main() {
     let builder = PrometheusBuilder::new();
@@ -21,7 +18,6 @@ fn main() {
     let temperature_c = gauge!("temperature_celsius");
     let temperature_f = gauge!("temperature_fahrenheit");
 
-    // Using Linux I2C Bus #1 in this example.
     let i2c_bus = I2cdev::new("/dev/i2c-1").unwrap();
     // Initialize the BME280 using the primary I2C address 0x76.
     let mut bme280 = BME280::new_primary(i2c_bus);
@@ -29,36 +25,51 @@ fn main() {
     let mut delay = Delay;
     bme280.init(&mut delay).unwrap();
 
-    // let mut rng = rand::thread_rng();
-    // let one_second = time::Duration::from_millis(1_000);
     loop {
         let measurements = bme280.measure(&mut delay).unwrap();
-        // let r: f64 = rng.gen();
+        let measurements = remove_error(measurements);
 
-        let str = write_measurements(&measurements);
-        print!("{}{}{}", termion::clear::All, termion::cursor::Goto(0, 0), str);
+        // print!("{}{}{}", termion::clear::All, termion::cursor::Goto(0, 0), measurements);
 
         humidity.set(measurements.humidity);
         pressure.set(measurements.pressure);
-        temperature_c.set(measurements.temperature);
-        temperature_f.set((measurements.temperature * 1.8) + 32.0);
-        // temperature.set(r);
+        temperature_c.set(measurements.temperature_c);
+        temperature_f.set(measurements.temperature_f);
 
         delay.delay_ms(1_000);
-        // thread::sleep(one_second);
     }
 }
 
-fn write_measurements(measurements: &Measurements<I2CError>) -> String {
-    // Change to round_ties_even when stabilized.
-    let rh = (measurements.humidity * 10.0).round() / 10.0;
-    let t1 = (measurements.temperature * 10.0).round() / 10.0;
-    let mut t2 = (measurements.temperature * 1.8) + 32.0;
-    t2 = (t2 * 100.0).round() / 100.0;
+struct MeasurementsAdjusted {
+    humidity: f32,
+    pressure: f32,
+    temperature_c: f32,
+    temperature_f: f32,
+}
 
-    let mut out = String::new();
-    writeln!(out, "Pressure: {} ± 100 pascals", measurements.pressure.round()).unwrap();
-    writeln!(out, "Relative Humidity: {rh:.1} ± 3 %").unwrap();
-    writeln!(out, "Temperature: {t1:.1} ± 1 °C  {t2:.2} ± 1.8 °F").unwrap();
-    out
+fn remove_error(measurements: Measurements<I2CError>) -> MeasurementsAdjusted {
+    // Change to round_ties_even when stabilized.
+    let humidity = (measurements.humidity * 10.0).round() / 10.0;
+    let pressure = measurements.pressure.round();
+    let temperature_c = (measurements.temperature * 10.0).round() / 10.0;
+    let mut temperature_f = (measurements.temperature * 1.8) + 32.0;
+    temperature_f = (temperature_f * 100.0).round() / 100.0;
+    MeasurementsAdjusted {
+        humidity,
+        pressure,
+        temperature_c,
+        temperature_f,
+    }
+}
+
+impl fmt::Display for MeasurementsAdjusted {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Pressure: {} ± 100 pascals", self.pressure)?;
+        writeln!(f, "Relative Humidity: {:.1} ± 3 %", self.humidity)?;
+        writeln!(
+            f,
+            "Temperature: {:.1} ± 1 °C  {:.2} ± 1.8 °F",
+            self.temperature_c, self.temperature_f
+        )
+    }
 }

@@ -8,13 +8,12 @@ edition = "2021"
 
 [dependencies]
 # bme280 = "0.5"
-bme280 = { git = "https://github.com/RobinThrift/bme280-rs.git", commit = "12d5e98253e0e8fadbd43895a608263f4a84884d"}
+bme280 = { git = "https://github.com/RobinThrift/bme280-rs.git" }
 embedded-hal = "1"
 linux-embedded-hal = "0.4"
 metrics = "0.22"
 metrics-exporter-prometheus = "0.14"
-# rand = "0.8"
-termion = "3"
+# termion = "3"
 
 [package.metadata.deb]
 maintainer = "David Campbell <dcampbell24@gmail.com>"
