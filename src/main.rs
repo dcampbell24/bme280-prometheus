@@ -27,27 +27,27 @@ fn main() {
 
     loop {
         let measurements = bme280.measure(&mut delay).unwrap();
-        let measurements = remove_error(measurements);
-
-        // print!("{}{}{}", termion::clear::All, termion::cursor::Goto(0, 0), measurements);
 
         humidity.set(measurements.humidity);
         pressure.set(measurements.pressure);
-        temperature_c.set(measurements.temperature_c);
-        temperature_f.set(measurements.temperature_f);
+        temperature_c.set(measurements.temperature);
+        temperature_f.set((measurements.temperature * 1.8) + 32.0);
+
+        // let measurements = remove_error(measurements);
+        // print!("{}{}{}", termion::clear::All, termion::cursor::Goto(0, 0), measurements);
 
         delay.delay_ms(1_000);
     }
 }
 
-struct MeasurementsAdjusted {
+pub struct MeasurementsAdjusted {
     humidity: f32,
     pressure: f32,
     temperature_c: f32,
     temperature_f: f32,
 }
 
-fn remove_error(measurements: Measurements<I2CError>) -> MeasurementsAdjusted {
+pub fn remove_error(measurements: Measurements<I2CError>) -> MeasurementsAdjusted {
     // Change to round_ties_even when stabilized.
     let humidity = (measurements.humidity * 10.0).round() / 10.0;
     let pressure = measurements.pressure.round();
