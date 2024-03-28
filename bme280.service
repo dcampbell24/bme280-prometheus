@@ -1,0 +1,10 @@
+[Unit]
+Description=Prometheus loggoing of the BME280
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/bme280-prometheus
+
+[Install]
+WantedBy=multi-user.target

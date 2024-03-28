@@ -12,3 +12,10 @@ metrics = "0.22"
 metrics-exporter-prometheus = "0.14"
 # rand = "0.8"
 termion = "3"
+
+[package.metadata.deb]
+maintainer = "David Campbell <dcampbell24@gmail.com>"
+assets = [
+    ["target/release/bme280-prometheus", "usr/bin/", "755"],
+    ["bme280.service", "etc/systemd/system/", "755"],
+]
