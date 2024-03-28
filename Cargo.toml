@@ -1,5 +1,8 @@
 [package]
 name = "bme280-prometheus"
+description = "A bme280 service."
+authors = ["David Lawrence Campbell"]
+license = "MIT"
 version = "0.1.0"
 edition = "2021"
 
