@@ -1,5 +1,5 @@
 [Unit]
-Description=Prometheus loggoing of the BME280
+Description=Prometheus logging of the BME280
 
 [Service]
 Type=simple
