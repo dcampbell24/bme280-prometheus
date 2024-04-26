@@ -14,7 +14,7 @@ fn main() {
         .expect("failed to install recorder/exporter");
 
     let humidity = gauge!("humidity_percent");
-    let pressure = gauge!("pressure_pascals");
+    let pressure = gauge!("pressure_atmospheres");
     let temperature_c = gauge!("temperature_celsius");
     let temperature_f = gauge!("temperature_fahrenheit");
 
@@ -29,7 +29,7 @@ fn main() {
         let measurements = bme280.measure(&mut delay).unwrap();
 
         humidity.set(measurements.humidity);
-        pressure.set(measurements.pressure);
+        pressure.set(measurements.pressure * 0.000987);
         temperature_c.set(measurements.temperature);
         temperature_f.set((measurements.temperature * 1.8) + 32.0);
 
@@ -64,7 +64,7 @@ pub fn remove_error(measurements: Measurements<I2CError>) -> MeasurementsAdjuste
 
 impl fmt::Display for MeasurementsAdjusted {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Pressure: {} ± 100 pascals", self.pressure)?;
+        writeln!(f, "Pressure: {} ± 1 hPa", self.pressure)?;
         writeln!(f, "Relative Humidity: {:.1} ± 3 %", self.humidity)?;
         writeln!(
             f,
