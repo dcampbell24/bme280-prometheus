@@ -14,7 +14,7 @@ fn main() {
         .expect("failed to install recorder/exporter");
 
     let humidity = gauge!("humidity_percent");
-    let pressure = gauge!("pressure_atmospheres");
+    let pressure = gauge!("pressure_atm");
     let temperature_c = gauge!("temperature_celsius");
     let temperature_f = gauge!("temperature_fahrenheit");
 
@@ -29,7 +29,7 @@ fn main() {
         let measurements = bme280.measure(&mut delay).unwrap();
 
         humidity.set(measurements.humidity);
-        pressure.set(measurements.pressure * 0.0987);
+        pressure.set(measurements.pressure * 0.000_009_87);
         temperature_c.set(measurements.temperature);
         temperature_f.set((measurements.temperature * 1.8) + 32.0);
 
